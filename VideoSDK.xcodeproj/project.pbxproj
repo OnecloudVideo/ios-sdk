@@ -7,12 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4E067E361B6F695E005060F3 /* SwiftHTTP.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4E067E351B6F695E005060F3 /* SwiftHTTP.framework */; };
+		4E067E371B6F696D005060F3 /* CryptoSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4EAB48A71B6B7ACB005A4C0A /* CryptoSwift.framework */; };
 		4EAB488F1B6B7A86005A4C0A /* VideoSDK.h in Headers */ = {isa = PBXBuildFile; fileRef = 4EAB488E1B6B7A86005A4C0A /* VideoSDK.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4EAB48951B6B7A86005A4C0A /* VideoSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4EAB48891B6B7A86005A4C0A /* VideoSDK.framework */; };
 		4EAB489C1B6B7A86005A4C0A /* VideoSDKTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EAB489B1B6B7A86005A4C0A /* VideoSDKTests.swift */; };
 		4EAB48A61B6B7AAD005A4C0A /* VideoSDK.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EAB48A51B6B7AAD005A4C0A /* VideoSDK.swift */; };
-		4EAB48A91B6B7ACB005A4C0A /* CryptoSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4EAB48A71B6B7ACB005A4C0A /* CryptoSwift.framework */; };
-		4EAB48AA1B6B7ACB005A4C0A /* SwiftHTTP.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4EAB48A81B6B7ACB005A4C0A /* SwiftHTTP.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -26,6 +26,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		4E067E351B6F695E005060F3 /* SwiftHTTP.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SwiftHTTP.framework; sourceTree = "<group>"; };
 		4EAB48891B6B7A86005A4C0A /* VideoSDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = VideoSDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		4EAB488D1B6B7A86005A4C0A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		4EAB488E1B6B7A86005A4C0A /* VideoSDK.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VideoSDK.h; sourceTree = "<group>"; };
@@ -34,7 +35,6 @@
 		4EAB489B1B6B7A86005A4C0A /* VideoSDKTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoSDKTests.swift; sourceTree = "<group>"; };
 		4EAB48A51B6B7AAD005A4C0A /* VideoSDK.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoSDK.swift; sourceTree = "<group>"; };
 		4EAB48A71B6B7ACB005A4C0A /* CryptoSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = CryptoSwift.framework; sourceTree = "<group>"; };
-		4EAB48A81B6B7ACB005A4C0A /* SwiftHTTP.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SwiftHTTP.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -42,8 +42,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4EAB48AA1B6B7ACB005A4C0A /* SwiftHTTP.framework in Frameworks */,
-				4EAB48A91B6B7ACB005A4C0A /* CryptoSwift.framework in Frameworks */,
+				4E067E371B6F696D005060F3 /* CryptoSwift.framework in Frameworks */,
+				4E067E361B6F695E005060F3 /* SwiftHTTP.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -61,8 +61,8 @@
 		4EAB487F1B6B7A86005A4C0A = {
 			isa = PBXGroup;
 			children = (
+				4E067E351B6F695E005060F3 /* SwiftHTTP.framework */,
 				4EAB48A71B6B7ACB005A4C0A /* CryptoSwift.framework */,
-				4EAB48A81B6B7ACB005A4C0A /* SwiftHTTP.framework */,
 				4EAB488B1B6B7A86005A4C0A /* VideoSDK */,
 				4EAB48981B6B7A86005A4C0A /* VideoSDKTests */,
 				4EAB488A1B6B7A86005A4C0A /* Products */,
@@ -422,6 +422,7 @@
 				4EAB48A11B6B7A86005A4C0A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		4EAB48A21B6B7A86005A4C0A /* Build configuration list for PBXNativeTarget "VideoSDKTests" */ = {
 			isa = XCConfigurationList;
@@ -430,6 +431,7 @@
 				4EAB48A41B6B7A86005A4C0A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
