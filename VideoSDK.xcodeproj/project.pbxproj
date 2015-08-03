@@ -10,6 +10,9 @@
 		4EAB488F1B6B7A86005A4C0A /* VideoSDK.h in Headers */ = {isa = PBXBuildFile; fileRef = 4EAB488E1B6B7A86005A4C0A /* VideoSDK.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4EAB48951B6B7A86005A4C0A /* VideoSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4EAB48891B6B7A86005A4C0A /* VideoSDK.framework */; };
 		4EAB489C1B6B7A86005A4C0A /* VideoSDKTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EAB489B1B6B7A86005A4C0A /* VideoSDKTests.swift */; };
+		4EAB48A61B6B7AAD005A4C0A /* VideoSDK.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EAB48A51B6B7AAD005A4C0A /* VideoSDK.swift */; };
+		4EAB48A91B6B7ACB005A4C0A /* CryptoSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4EAB48A71B6B7ACB005A4C0A /* CryptoSwift.framework */; };
+		4EAB48AA1B6B7ACB005A4C0A /* SwiftHTTP.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4EAB48A81B6B7ACB005A4C0A /* SwiftHTTP.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -29,6 +32,9 @@
 		4EAB48941B6B7A86005A4C0A /* VideoSDKTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VideoSDKTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4EAB489A1B6B7A86005A4C0A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		4EAB489B1B6B7A86005A4C0A /* VideoSDKTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoSDKTests.swift; sourceTree = "<group>"; };
+		4EAB48A51B6B7AAD005A4C0A /* VideoSDK.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoSDK.swift; sourceTree = "<group>"; };
+		4EAB48A71B6B7ACB005A4C0A /* CryptoSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = CryptoSwift.framework; sourceTree = "<group>"; };
+		4EAB48A81B6B7ACB005A4C0A /* SwiftHTTP.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SwiftHTTP.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -36,6 +42,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4EAB48AA1B6B7ACB005A4C0A /* SwiftHTTP.framework in Frameworks */,
+				4EAB48A91B6B7ACB005A4C0A /* CryptoSwift.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -53,6 +61,8 @@
 		4EAB487F1B6B7A86005A4C0A = {
 			isa = PBXGroup;
 			children = (
+				4EAB48A71B6B7ACB005A4C0A /* CryptoSwift.framework */,
+				4EAB48A81B6B7ACB005A4C0A /* SwiftHTTP.framework */,
 				4EAB488B1B6B7A86005A4C0A /* VideoSDK */,
 				4EAB48981B6B7A86005A4C0A /* VideoSDKTests */,
 				4EAB488A1B6B7A86005A4C0A /* Products */,
@@ -71,6 +81,7 @@
 		4EAB488B1B6B7A86005A4C0A /* VideoSDK */ = {
 			isa = PBXGroup;
 			children = (
+				4EAB48A51B6B7AAD005A4C0A /* VideoSDK.swift */,
 				4EAB488E1B6B7A86005A4C0A /* VideoSDK.h */,
 				4EAB488C1B6B7A86005A4C0A /* Supporting Files */,
 			);
@@ -209,6 +220,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4EAB48A61B6B7AAD005A4C0A /* VideoSDK.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -323,25 +335,36 @@
 		4EAB48A01B6B7A86005A4C0A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				INFOPLIST_FILE = VideoSDK/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
 		};
 		4EAB48A11B6B7A86005A4C0A /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				INFOPLIST_FILE = VideoSDK/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
