@@ -118,23 +118,25 @@ public func deleteParts(onSuccess : () -> Void, onFail : (code : Int?, msg : Str
  
  public func videoTotal(onSuccess : (usages : [Usage<UInt>]) -> Void, onFail : (code : Int?, msg : String) -> Void, field : UsageField, startAt : NSDate, endAt : NSDate) 
 # 文件组织
- |-CryptoSwift.framework
- |---Headers
- |---Modules
- |-----CryptoSwift.swiftmodule
- |-SwiftHTTP.framework
- |---Headers
- |---Modules
- |-----SwiftHTTP.swiftmodule
- |-VideoSDK
- |-VideoSDK.xcodeproj
- |---project.xcworkspace
- |-----xcuserdata
- |-------kinghai.xcuserdatad
- |---xcuserdata
- |-----kinghai.xcuserdatad
- |-------xcschemes
- |-VideoSDKTests
+
+<p> |-CryptoSwift.framework </p>
+ <p>|---Headers </p>
+<p> |---Modules</p>
+<p> |-----CryptoSwift.swiftmodule</p>
+<p> |-SwiftHTTP.framework</p>
+<p> |---Headers</p>
+<p> |---Modules</p>
+<p> |-----SwiftHTTP.swiftmodule</p>
+<p>  |-VideoSDK</p>
+<p>  |-VideoSDK.xcodeproj</p>
+<p>  |---project.xcworkspace</p>
+<p>  |-----xcuserdata</p>
+<p>  |-------kinghai.xcuserdatad</p>
+<p>  |---xcuserdata</p>
+<p>  |-----kinghai.xcuserdatad</p>
+<p>  |-------xcschemes</p>
+<p>  |-VideoSDKTests</p>
+
 # TODOs
 # Contact
   
