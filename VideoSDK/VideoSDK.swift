@@ -31,6 +31,10 @@ public class VideoSDK: AbstractService{
     public func getMultipartService() -> MultipartService {
         return MultipartService(host: host, accessKey: accessKey, accessSecret: accessSecret)
     }
+    
+    public func getAdvertisementService() -> AdvertisementService {
+        return AdvertisementService(host: host, accessKey: accessKey, accessSecret: accessSecret)
+    }
 }
 
 public class Catalog: PropertyChangeTrait {
@@ -1237,10 +1241,152 @@ public class MultipartService: AbstractService {
     }
 }
 
+public class Advertisement {
+    var id: Int
+    var name: String
+    var status: AdvertisementStatus
+    var duration : MediaDuration
+    var size: MediaSize
+    var code: String
+    
+    public init(id: Int, name: String, status: AdvertisementStatus,
+        duration : MediaDuration, size: MediaSize, code: String) {
+            self.id = id
+            self.name = name
+            self.status = status
+            self.duration = duration
+            self.size = size
+            self.code = code
+    }
+}
+
+public enum AdvertisementStatus: String {
+    case PEOGRESSING = "PEOGRESSING"
+    case SUCCESS = "SUCCESS"
+    case FAIL = "FAIL"
+}
+
+class AdvertisementCreator : TypeConverter {
+    func create(item : AnyObject) -> Advertisement {
+        return Advertisement(id: anyObjectToInt(item["id"]), name: anyObjectToString(item["name"])!, status: AdvertisementStatus(rawValue: anyObjectToString(item["status"])!)!, duration: anyObjectToUInt(item["duration"]), size: anyObjectToUInt(item["size"]), code: anyObjectToString(item["code"])!)
+    }
+}
+
+/**
+    AdvertisementService is the class to manage advertisement. it has methods about CRUB.
+*/
+public class AdvertisementService : AbstractService {
+    
+    /**
+        get advertisement info
+        param: onSuccess The closure called if query success, The closure's argument advertisement presents the query result.
+        param: onFail The closure called if query fail, The closure's argument code presents error code, The closure's argument msg presents the reason why fail.
+        param: id The id of advertisement.
+    
+        returns Void.
+    */
+    public func get(onSuccess: (advertisement : Advertisement) -> Void, onFail: (code: Int?, msg: String) -> Void, id: String) {
+        var successHandler = { (data: AnyObject, msg: String) -> Void in
+            onSuccess(advertisement: self.createAdvertisement(data))
+        }
+        
+        getHTTP("/ad/get.api", params: ["id" : id], successHandler: successHandler, failHandler: onFail)
+    }
+    
+    /**
+    query advertisement list by specific query condition.
+    param: onSuccess The closure called if query success, The closure's argument advertisements presents the query result.
+    param: onFail The closure called if query fail, The closure's argument code presents error code, The closure's argument msg presents the reason why fail.
+    param: .
+    
+    returns Void.
+    */
+    public func list(onSuccess: (advertisements: [Advertisement]) -> Void, onFail: (code: Int?, msg: String) -> Void, nameLike: String?, page: UInt = 1, maxResult: UInt = 100) {
+        var successHandler = { (data: AnyObject, msg: String) -> Void in
+            let adArr = data["ads"] as! NSArray
+
+            onSuccess(advertisements: map(adArr, { (ao: AnyObject) -> Advertisement in
+                return self.createAdvertisement(ao)
+            }))
+        }
+        
+        var params: Dictionary<String, AnyObject> = [:]
+        
+        if let nl = nameLike {
+            params["nameLike"] = nl
+        }
+        
+        params["page"] = page
+        params["maxResult"] = maxResult
+        
+        getHTTP("/ad/list.api", params: params, successHandler: successHandler, failHandler: onFail)
+    }
+    
+    /**
+        update advertisement.
+        param: onSuccess    The closure called if update success, The closure's argument msg presents the detail message.
+        param: onFail       The closure called if update fail, The closure's argument code presents the error code, The closure's argument msg presents the reason why fail.
+        param: id           The id of advertisement
+        param: name         The new name of advertisement.
+        returns: Void
+    */
+    public func update(onSuccess: (msg: String) -> Void, onFail: (code: Int?, msg: String) -> Void, id: String, name: String) -> Void {
+        postHTTP("/ad/update.api", params: ["id": id, "name": name], successHandler: { (data, msg) -> Void in
+            onSuccess(msg: msg)
+        }, failHandler: onFail)
+    }
+    
+    /**
+        delete advertisement
+        param: onSuccess    The closure called if delete success, The closure's argument msg presents the detail message.
+        param: onFail       The closure called if delete fail, The closure's argument code presents the error code, The closure's argument presents the reason why fail.
+        param: id           The id of advertisement.
+        returns Void
+    */
+    public func delete(onSuccess: (msg: String) -> Void, onFail: (code: Int?, msg: String) -> Void, id: String) {
+        postHTTP("/ad/delete.api", params: ["id": id], successHandler: { (data, msg) -> Void in
+            onSuccess(msg: msg)
+        }, failHandler: onFail)
+    }
+    
+    /**
+        upload advertisement
+        @param onSuccess    The closure called if upload success, The closure's argument advertisement presents the advertisement created by uploaded video.
+        @param onFail       The closure called if upload fail, The closure's argument code presents the error code, The closure's argument msg presents the reason why fail.
+        @param filePath     The local file path.
+        @param name         The advertisement's name(Optional).
+
+        @returns Void
+    */
+    public func upload(onSuccess: (advertisement: Advertisement) -> Void, onFail: (code: Int?, msg: String) -> Void, filePath: String, name: String?) {
+        upload(onSuccess, onFail: onFail, onProgress: { (value) -> Void in
+            NSLog("upload ad progress to\(value)")
+        }, filePath: filePath, name: name)
+    }
+    
+    public func upload(onSuccess: (advertisement: Advertisement) -> Void, onFail: (code: Int?, msg: String) -> Void, onProgress: (value: Double) -> Void, filePath: String, name: String?) {
+        
+        var params: Dictionary<String, AnyObject> = [:]
+        if let n = name {
+            params["name"] = n
+        }
+        
+        var successHandler = { (data: AnyObject, msg: String) -> Void in
+            onSuccess(advertisement: self.createAdvertisement(data))
+        }
+        
+        uploadHTTP("/ad/upload.api", method: .POST, filePath: filePath, params: params, progress: onProgress, successHandler: successHandler, failHandler: onFail)
+    }
+    
+    private func createAdvertisement(ao: AnyObject) -> Advertisement {
+        return AdvertisementCreator().create(ao)
+    }
+}
+
 /**
     AbstractService is a base class, specific biz class should inherit. It provide usful methods to send http request to server.
 */
-public class AbstractService {
+public class AbstractService: TypeConverter {
     
     private let host:String!
     private let accessKey:String!
@@ -1301,8 +1447,7 @@ public class AbstractService {
     }
 }
 
-//extension this class to convert type
-extension AbstractService {
+public class TypeConverter {
     internal func anyObjectToString(ao: AnyObject?) -> String? {
         return ConvertUtil.anyObjectToString(ao)
     }
