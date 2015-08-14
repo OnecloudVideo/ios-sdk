@@ -35,6 +35,10 @@ public class VideoSDK: AbstractService{
     public func getAdvertisementService() -> AdvertisementService {
         return AdvertisementService(host: host, accessKey: accessKey, accessSecret: accessSecret)
     }
+    
+    public func getAdvertisingService() -> AdvertisingService {
+        return AdvertisingService(host: host, accessKey: accessKey, accessSecret: accessSecret)
+    }
 }
 
 public class Catalog: PropertyChangeTrait {
@@ -655,34 +659,13 @@ public class UsageService: AbstractService {
             var usages = [Usage<UInt>]()
             
             for item in arr {
-                usages.append(Usage<UInt>(startAt: toDate(item["startAt"]), endAt: toDate(item["endAt"]), usage: anyObjectToUInt(item[usageItem])))
+                usages.append(Usage<UInt>(startAt: DateUtil.toDate(item["startAt"]), endAt: DateUtil.toDate(item["endAt"]), usage: anyObjectToUInt(item[usageItem])))
             }
             
             onSuccess(usages: usages)
         }
         
-        getHTTP(action, params: ["field": field.rawValue, "startAt": toString(startAt), "endAt": toString(endAt)], successHandler: successHandler, failHandler: onFail)
-    }
-    
-    //NSDate convert to string
-    private func toString(d: NSDate) -> String {
-        return getFormatter() .stringFromDate(d)
-    }
-    
-    //anyObject convert to NSDate
-    private func toDate(ao: AnyObject?) -> NSDate {
-        return toDate(anyObjectToString(ao)!)
-    }
-    
-    //String convert to NSDate
-    private func toDate(str: String) -> NSDate {
-        return getFormatter() .dateFromString(str)!
-    }
-    
-    private func getFormatter() -> NSDateFormatter {
-        var f = NSDateFormatter()
-        f.dateFormat = "yyyy-MM-dd HH:mm:ss"
-        return f
+        getHTTP(action, params: ["field": field.rawValue, "startAt": DateUtil.toString(startAt), "endAt": DateUtil.toString(endAt)], successHandler: successHandler, failHandler: onFail)
     }
 }
 
@@ -1297,13 +1280,15 @@ public class AdvertisementService : AbstractService {
     query advertisement list by specific query condition.
     param: onSuccess The closure called if query success, The closure's argument advertisements presents the query result.
     param: onFail The closure called if query fail, The closure's argument code presents error code, The closure's argument msg presents the reason why fail.
-    param: .
+    param: nameLike The query condition to indicate only advertisement with similar name will return.
+    param: page The query condition to indicate current page.
+    param: maxResult The query condition to indicate the number of catalog in each page..
     
     returns Void.
     */
     public func list(onSuccess: (advertisements: [Advertisement]) -> Void, onFail: (code: Int?, msg: String) -> Void, nameLike: String?, page: UInt = 1, maxResult: UInt = 100) {
         var successHandler = { (data: AnyObject, msg: String) -> Void in
-            let adArr = data["ads"] as! NSArray
+            let adArr = data["adList"] as! NSArray
 
             onSuccess(advertisements: map(adArr, { (ao: AnyObject) -> Advertisement in
                 return self.createAdvertisement(ao)
@@ -1358,28 +1343,211 @@ public class AdvertisementService : AbstractService {
 
         @returns Void
     */
-    public func upload(onSuccess: (advertisement: Advertisement) -> Void, onFail: (code: Int?, msg: String) -> Void, filePath: String, name: String?) {
+    public func upload(onSuccess: (advertisement: Advertisement) -> Void, onFail: (code: Int?, msg: String) -> Void, filePath: String) {
         upload(onSuccess, onFail: onFail, onProgress: { (value) -> Void in
             NSLog("upload ad progress to\(value)")
-        }, filePath: filePath, name: name)
+        }, filePath: filePath)
     }
     
-    public func upload(onSuccess: (advertisement: Advertisement) -> Void, onFail: (code: Int?, msg: String) -> Void, onProgress: (value: Double) -> Void, filePath: String, name: String?) {
-        
-        var params: Dictionary<String, AnyObject> = [:]
-        if let n = name {
-            params["name"] = n
-        }
+    public func upload(onSuccess: (advertisement: Advertisement) -> Void, onFail: (code: Int?, msg: String) -> Void, onProgress: (value: Double) -> Void, filePath: String) {
         
         var successHandler = { (data: AnyObject, msg: String) -> Void in
             onSuccess(advertisement: self.createAdvertisement(data))
         }
         
-        uploadHTTP("/ad/upload.api", method: .POST, filePath: filePath, params: params, progress: onProgress, successHandler: successHandler, failHandler: onFail)
+        uploadHTTP("/ad/upload.api", method: .POST, filePath: filePath, params: [:], progress: onProgress, successHandler: successHandler, failHandler: onFail)
     }
     
     private func createAdvertisement(ao: AnyObject) -> Advertisement {
         return AdvertisementCreator().create(ao)
+    }
+}
+
+public class Advertising {
+    var id: Int
+    var adId: Int
+    var name: String
+    var position: AdvertisingPosition
+    var status: AdvertisingStatus
+    var onlineDate: NSDate
+    var offlineDate: NSDate
+    var createTime: NSDate
+    var link: String?
+    var catalogIds: [String]
+    
+    public init(id: Int ,adId: Int, name: String ,position: AdvertisingPosition
+        ,status: AdvertisingStatus ,onlineDate: NSDate, offlineDate: NSDate,
+        createTime: NSDate, link: String?, catalogIds: [String]) {
+            
+            self.id = id
+            self.adId = adId
+            self.name = name
+            self.position = position
+            self.status = status
+            self.onlineDate = onlineDate
+            self.offlineDate = offlineDate
+            self.createTime = createTime
+            self.link = link
+            self.catalogIds = catalogIds
+    }
+}
+
+public enum AdvertisingStatus: String {
+    case APPLIED = "APPLIED"
+    case OFFLINE = "OFFLINE"
+}
+
+public enum AdvertisingPosition: String {
+    case HEAD = "HEAD"
+    case END = "END"
+}
+
+class AdvertisingCreator : TypeConverter {
+    func create(data: AnyObject) -> Advertising {
+        return Advertising(id: anyObjectToInt(data["id"]), adId: anyObjectToInt(data["adId"]), name: anyObjectToString(data["name"])!, position: AdvertisingPosition(rawValue: anyObjectToString(data["position"])!)!, status: AdvertisingStatus(rawValue: anyObjectToString(data["status"])!)!, onlineDate: DateUtil.toDate(data["onlineDate"]), offlineDate: DateUtil.toDate(data["offlineDate"]), createTime: DateUtil.toDate(data["createTime"]), link: anyObjectToString(data["link"]), catalogIds: (anyObjectToString(data["catalogIds"])?.componentsSeparatedByString(","))!)
+    }
+}
+
+public class AdvertisingService : AbstractService {
+    public func add(onSuccess: (advertising: Advertising) -> Void, onFail: (code: Int?, msg: String) -> Void,
+        name: String, adId: String, position: AdvertisingPosition, onlineDate: NSDate, offlineDate: NSDate, link: String?, catalogIds: [String]) {
+
+            var params: Dictionary<String, AnyObject> = ["name": name, "adId": adId, "position": position.rawValue, "onlineDate": DateUtil.toString(onlineDate), "offlineDate": DateUtil.toString(offlineDate), "catalogIds": catalogIds]
+            
+            if let l = link {
+                params["link"] = l
+            }
+            
+            let successHandler = { (data: AnyObject, msg: String) -> Void in
+                onSuccess(advertising: self.createAdvertising(data))
+            }
+            
+            postHTTP("/advertise/add.api", params: params, successHandler: successHandler, failHandler: onFail)
+    }
+    
+    /**
+    query advertising list by specific query condition.
+    param: onSuccess The closure called if query success, The closure's argument advertsings presents the query result.
+    param: onFail The closure called if query fail, The closure's argument code presents error code, The closure's argument msg presents the reason why fail.
+    param: nameLike The query condition to indicate only advertising with similar name will return.
+    param: status   The query condition to indicate only advertising with same status will return.
+    param: page The query condition to indicate current page.
+    param: maxResult The query condition to indicate the number of catalog in each page..
+    
+    returns Void.
+    */
+    public func list(onSuccess: (advertsings: [Advertising]) -> Void, onFail: (code: Int?, msg: String) -> Void, nameLike: String?, status: AdvertisingStatus?, page: UInt = 1, maxResult: UInt = 100) {
+        
+        var params: Dictionary<String, AnyObject> = ["page": page, "maxResult": maxResult]
+        if let nl = nameLike {
+            params["nameLike"] = nl
+        }
+        if let s = status {
+            params["status"] = s.rawValue
+        }
+        
+        let successHandler = { (data: AnyObject, msg: String) -> Void in
+            let advertisingArr = data["advertiseList"] as! NSArray
+            
+            onSuccess(advertsings: map(advertisingArr, { (data: AnyObject) -> Advertising in
+                return self.createAdvertising(data)
+            }))
+        }
+        
+        getHTTP("/advertise/list.api", params: params, successHandler: successHandler, failHandler: onFail)
+    }
+    
+    /**
+    query advertising by id.
+    param: onSuccess The closure called if query success, The closure's argument advertsing presents the query result.
+    param: onFail The closure called if query fail, The closure's argument code presents error code, The closure's argument msg presents the reason why fail.
+    param: id  The id of advertising.
+    
+    returns Void.
+    */
+    public func get(onSuccess: (advertising: Advertising) -> Void, onFail: (code: Int?, msg: String) -> Void, id: String) {
+        getHTTP("/advertise/get.api", params: ["id": id], successHandler: { (data, msg) -> Void in
+            onSuccess(advertising: self.createAdvertising(data))
+        }, failHandler: onFail)
+    }
+    
+    /**
+    update advertising.
+    param: onSuccess The closure called if update success, The closure's argument msg presents message server answer.
+    param: onFail The closure called if update fail, The closure's argument code presents error code, The closure's argument msg presents the reason why fail.
+    param: id  The id of advertising.
+    param: name(Optional)
+    param: adId(Optional)
+    param: position(Optional)
+    param: onlineDate(Optional)
+    param: offlineDate(Optional)
+    param: link(Optional)
+    param: catalogIds(Optional)
+    
+    returns Void.
+    */
+    public func update(onSuccess: (msg: String) -> Void, onFail: (code: Int?, msg: String) -> Void, id: String, name: String?, adId: String?, position: AdvertisingPosition?, onlineDate: NSDate?, offlineDate: NSDate?, link: String?, catalogIds:[String]?) {
+        var params: Dictionary<String, AnyObject> = ["id": id]
+        
+        if let n = name {
+            params["name"] = n
+        }
+        if let a = adId {
+            params["adId"] = a
+        }
+        if let p = position {
+            params["position"] = p.rawValue
+        }
+        if let o = onlineDate {
+            params["onlineDate"] = DateUtil.toString(o)
+        }
+        if let o = offlineDate {
+            params["offlineDate"] = DateUtil.toString(o)
+        }
+        if let l = link {
+            params["link"] = l
+        }
+        if let c = catalogIds {
+            params["catalogIds"] = c
+        }
+        
+        postHTTP("/advertise/update.api", params: params, successHandler: { (data, msg) -> Void in
+            onSuccess(msg: msg)
+        }, failHandler: onFail)
+    }
+    
+    /**
+    offline advertising by id.
+    param: onSuccess The closure called if offline success, The closure's argument msg presents message server answer.
+    param: onFail The closure called if offline fail, The closure's argument code presents error code, The closure's argument msg presents the reason why fail.
+    param: id  The id of advertising.
+    
+    returns: Void
+    */
+    public func offline(onSuccess: (msg: String) -> Void, onFail: (code: Int?, msg: String) -> Void, id: String) {
+        
+        postHTTP("/advertise/offline.api", params: ["id": id], successHandler: { (data, msg) -> Void in
+            onSuccess(msg: msg)
+            }, failHandler: onFail)
+    }
+
+    /**
+    delete advertising by id.
+    param: onSuccess The closure called if delete success, The closure's argument msg presents message server answer.
+    param: onFail The closure called if delete fail, The closure's argument code presents error code, The closure's argument msg presents the reason why fail.
+    param: id  The id of advertising.
+    
+    returns: Void
+    */
+    public func delete(onSuccess: (msg: String) -> Void, onFail: (code: Int?, msg: String) -> Void, id: String) {
+        
+        postHTTP("/advertise/delete.api", params: ["id": id], successHandler: { (data, msg) -> Void in
+            onSuccess(msg: msg)
+        }, failHandler: onFail)
+    }
+    
+    func createAdvertising(data: AnyObject) -> Advertising {
+        return AdvertisingCreator().create(data)
     }
 }
 
@@ -1712,5 +1880,28 @@ extension NSString {
     
     func toString() -> String {
         return self as! String
+    }
+}
+
+class DateUtil {
+    //NSDate convert to string
+    static func toString(d: NSDate) -> String {
+        return getFormatter() .stringFromDate(d)
+    }
+    
+    //anyObject convert to NSDate
+    static func toDate(ao: AnyObject?) -> NSDate {
+        return toDate(TypeConverter().anyObjectToString(ao)!)
+    }
+    
+    //String convert to NSDate
+    static func toDate(str: String) -> NSDate {
+        return getFormatter() .dateFromString(str)!
+    }
+    
+    static func getFormatter() -> NSDateFormatter {
+        var f = NSDateFormatter()
+        f.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        return f
     }
 }
