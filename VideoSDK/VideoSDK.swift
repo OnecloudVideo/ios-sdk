@@ -340,17 +340,17 @@ class VideoCreator {
         let type = anyObjectToString(item["type"])
         let desc = anyObjectToString(item["description"])
         
-        var v = Video(id: id, name: name, description: desc, duration: duration, size: size, catalog: catalog, status: status, type: type)
+        let v = Video(id: id, name: name, description: desc, duration: duration, size: size, catalog: catalog, status: status, type: type)
         
         if let embedCodes = item["embedCodes"] as? NSArray {
             var transcodedVideos = [TranscodedVideo]()
             
             for ec in embedCodes {
-                var tvc = TranscodedVideoCode(auto: anyObjectToString(ec["autoAdaptionCode"]), html5: anyObjectToString(ec["html5Code"]),
+                let tvc = TranscodedVideoCode(auto: anyObjectToString(ec["autoAdaptionCode"]), html5: anyObjectToString(ec["html5Code"]),
                     flash: anyObjectToString(ec["flashCode"]), portable: anyObjectToString(ec["portableCode"]),
                     mp4: anyObjectToString(ec["mp4Code"]), flv: anyObjectToString(ec["flvCode"]))
                 
-                var tv = TranscodedVideo(clarity: anyObjectToString(ec["clarity"]), resolution: anyObjectToString(ec["resolution"]),
+                let tv = TranscodedVideo(clarity: anyObjectToString(ec["clarity"]), resolution: anyObjectToString(ec["resolution"]),
                     m3u8: anyObjectToString(ec["filePath"]), code: tvc)
                 transcodedVideos.append(tv)
             }
@@ -416,7 +416,7 @@ public class VideoService: AbstractService
         
         func successHandler(data: AnyObject, msg: String) -> Void {
             
-            var videoStrArr = data["videos"] as! NSArray
+            let videoStrArr = data["videos"] as! NSArray
             var vs = [Video]()
             
             for item in videoStrArr {
@@ -495,7 +495,7 @@ public class VideoService: AbstractService
             onSuccess(video: v)
         }
         
-        uploadHTTP("/video/upload.api", method: HTTPMethod.POST, filePath: filePath, params: ["catalogId": catalogId, "name": name, "description": description], progress: progressHandler, successHandler: successHandler, failHandler: onFail)
+        uploadHTTP("/video/upload.api", filePath: filePath, params: ["catalogId": catalogId, "name": name, "description": description], progress: progressHandler, successHandler: successHandler, failHandler: onFail)
 
         return v
     }
@@ -539,14 +539,26 @@ public class VideoService: AbstractService
 
 //Usage describe how many resource has been used in specified time.
 public class Usage <T> {
-    var startAt: NSDate //start time
-    var endAt: NSDate   //end time
-    var usage: T        //measure of resouce used
+    public var startAt: NSDate //start time
+    public var endAt: NSDate   //end time
+    public var usage: T        //measure of resouce used
     
-    public init(var startAt: NSDate, var endAt: NSDate, var usage: T) {
+    public init(startAt: NSDate, endAt: NSDate, usage: T) {
         self.startAt = startAt
         self.endAt = endAt
         self.usage = usage
+    }
+    
+    public func getStartAt() -> NSDate {
+        return startAt
+    }
+    
+    public func getEndAt() -> NSDate {
+        return endAt
+    }
+    
+    public func getUsage() -> T {
+        return usage
     }
 }
 
@@ -655,7 +667,7 @@ public class UsageService: AbstractService {
     private func usage(onSuccess: (usages: [Usage<UInt>]) -> Void, onFail: (code: Int?, msg: String) -> Void, field: UsageField, startAt: NSDate, endAt: NSDate, action: String, usageItem: String) {
         
         func successHandler(data: AnyObject, msg: String) {
-            var arr = data["resources"] as! NSArray
+            let arr = data["resources"] as! NSArray
             var usages = [Usage<UInt>]()
             
             for item in arr {
@@ -684,12 +696,18 @@ public class LocalFile {
     }()
     
     private lazy var attribute: [NSObject: AnyObject] = { [unowned self] in
-        return self.filemgr.attributesOfItemAtPath(self.contentsOfFile, error: nil)!
+
+        do {
+            return try self.filemgr.attributesOfItemAtPath(self.contentsOfFile)
+        } catch {
+            return [:]
+        }
+
     }()
     
     public var name: String
     {
-        return self.contentsOfFile.lastPathComponent.stringByDeletingPathExtension
+        return (NSURL(fileURLWithPath: self.contentsOfFile).URLByDeletingPathExtension?.lastPathComponent)!
     }
     
     public lazy var mimeType: String = { [unowned self] in
@@ -703,7 +721,7 @@ public class LocalFile {
     }
     
     public func md5() -> String {
-        var ns: NSData! = nsdata.md5()
+        let ns: NSData! = nsdata.md5()
         var s = String(stringInterpolationSegment: ns)
         
         s.removeAtIndex(s.startIndex)
@@ -747,7 +765,7 @@ public class MultipartLocalFileReader {
             return nil
         }
         
-        var offset: UInt64 = UInt64(Int((part - 1) * getPartSize()))
+        let offset: UInt64 = UInt64(Int((part - 1) * getPartSize()))
         
         file?.seekToFileOffset(offset)
         var partFile: NSData?
@@ -798,18 +816,18 @@ public struct Multipart {
     present a video which is multipart uploading.
 */
 public class MultipartVideo: Video {
-    var filePath: String
-    var file: LocalFile
+    public var filePath: String
+    public var file: LocalFile
     
-    var task: MultipartTask?
-    var uploadedParts = [Multipart]()
-    var leftParts = [Multipart]()
+    public var task: MultipartTask?
+    public var uploadedParts = [Multipart]()
+    public var leftParts = [Multipart]()
     
-    var totalPart: UInt?
-    var partSize: UInt?
+    public var totalPart: UInt?
+    public var partSize: UInt?
     
-    var cancelable: Bool = false
-    var halt: Bool = false {
+    public var cancelable: Bool = false
+    public var halt: Bool = false {
         didSet {
             propertyChange("halt", newValue: halt, oldValue: oldValue)
         }
@@ -860,7 +878,7 @@ public class MultipartService: AbstractService {
     public func upload(onSuccess: (video: Video) -> Void, onFail: (code: Int?, msg: String) -> Void, filePath: String, catalog: Catalog) -> MultipartVideo {
         
         let lf = LocalFile(contentsOfFile: filePath)
-        var mv = MultipartVideo(filePath: filePath, id: nil, name: lf?.name, description: nil, duration: nil, size: lf?.size, catalog: catalog, status: "UPLOADING", type: nil)
+        let mv = MultipartVideo(filePath: filePath, id: nil, name: lf?.name, description: nil, duration: nil, size: lf?.size, catalog: catalog, status: "UPLOADING", type: nil)
         
         upload(onSuccess, onFail: onFail, multipartVideo: mv)
         
@@ -881,8 +899,7 @@ public class MultipartService: AbstractService {
         //all parts has been uploaded
         if mv.allUploaded() {
             //assemble
-            
-            sort(&mv.uploadedParts, {
+            mv.uploadedParts.sortInPlace({
                 return $0.number < $1.number
             })
             
@@ -908,12 +925,12 @@ public class MultipartService: AbstractService {
         }
         
         var part = mv.leftParts.removeLast()
-        var partNumber = part.number
+        let partNumber = part.number
      
         //update video's progress
-        var onProgress = { (val: Double) -> Void in
+        let onProgress = { (val: Double) -> Void in
             var uploaded = 0
-            var total = mv.size
+            let total = mv.size
             
             uploaded += Int(mv.partSize!) * mv.uploadedParts.count
             
@@ -1081,7 +1098,7 @@ public class MultipartService: AbstractService {
             onSucess(partKey: anyObjectToString(data["partKey"])!, partMD5: anyObjectToString(data["partMD5"])!)
         }
 
-        uploadHTTP("/video/multipartUpload/uploadPart.api", method: HTTPMethod.POST, fileData: fileData!, fileName: lFile!.name, mimeType: lFile!.mimeType, params: ["uploadId": uploadId, "partNumber": partNumber], progress: onProgress, successHandler: successHandlerProxy, failHandler: onFail)
+        uploadHTTP("/video/multipartUpload/uploadPart.api", fileData: fileData!, fileName: lFile!.name, mimeType: lFile!.mimeType, params: ["uploadId": uploadId, "partNumber": partNumber], progress: onProgress, successHandler: successHandlerProxy, failHandler: onFail)
     }
     
     /**
@@ -1187,7 +1204,7 @@ public class MultipartService: AbstractService {
     public func getParts(onSuccess: (parts: [Multipart]) -> Void, onFail: (code: Int?, msg: String) -> Void, uploadId: String) {
         
         getHTTP("/video/multipartUpload/getParts.api", params: ["uploadId": uploadId], successHandler: { (data, msg) -> Void in
-            var uploadedParts = data["uploadedParts"] as! NSArray
+            let uploadedParts = data["uploadedParts"] as! NSArray
             var parts = [Multipart]()
             
             for up in uploadedParts {
@@ -1269,7 +1286,7 @@ public class AdvertisementService : AbstractService {
         returns Void.
     */
     public func get(onSuccess: (advertisement : Advertisement) -> Void, onFail: (code: Int?, msg: String) -> Void, id: String) {
-        var successHandler = { (data: AnyObject, msg: String) -> Void in
+        let successHandler = { (data: AnyObject, msg: String) -> Void in
             onSuccess(advertisement: self.createAdvertisement(data))
         }
         
@@ -1287,10 +1304,10 @@ public class AdvertisementService : AbstractService {
     returns Void.
     */
     public func list(onSuccess: (advertisements: [Advertisement]) -> Void, onFail: (code: Int?, msg: String) -> Void, nameLike: String?, page: UInt = 1, maxResult: UInt = 100) {
-        var successHandler = { (data: AnyObject, msg: String) -> Void in
+            let successHandler = { (data: AnyObject, msg: String) -> Void in
             let adArr = data["adList"] as! NSArray
 
-            onSuccess(advertisements: map(adArr, { (ao: AnyObject) -> Advertisement in
+            onSuccess(advertisements: adArr.map({ (ao: AnyObject) -> Advertisement in
                 return self.createAdvertisement(ao)
             }))
         }
@@ -1351,11 +1368,11 @@ public class AdvertisementService : AbstractService {
     
     public func upload(onSuccess: (advertisement: Advertisement) -> Void, onFail: (code: Int?, msg: String) -> Void, onProgress: (value: Double) -> Void, filePath: String) {
         
-        var successHandler = { (data: AnyObject, msg: String) -> Void in
+        let successHandler = { (data: AnyObject, msg: String) -> Void in
             onSuccess(advertisement: self.createAdvertisement(data))
         }
         
-        uploadHTTP("/ad/upload.api", method: .POST, filePath: filePath, params: [:], progress: onProgress, successHandler: successHandler, failHandler: onFail)
+        uploadHTTP("/ad/upload.api", filePath: filePath, params: [:], progress: onProgress, successHandler: successHandler, failHandler: onFail)
     }
     
     private func createAdvertisement(ao: AnyObject) -> Advertisement {
@@ -1448,8 +1465,8 @@ public class AdvertisingService : AbstractService {
         
         let successHandler = { (data: AnyObject, msg: String) -> Void in
             let advertisingArr = data["advertiseList"] as! NSArray
-            
-            onSuccess(advertsings: map(advertisingArr, { (data: AnyObject) -> Advertising in
+
+            onSuccess(advertsings: advertisingArr.map({ (data: AnyObject) -> Advertising in
                 return self.createAdvertising(data)
             }))
         }
@@ -1581,14 +1598,14 @@ public class AbstractService: TypeConverter {
         getNetService().post(action, params: params, netServiceResponseHandler: getNetServiceResponseHander(successHandler, failHandler: failHandler))
     }
     
-    internal func uploadHTTP(action:String, method: HTTPMethod, filePath: String, params: Dictionary<String, AnyObject>, progress: (value: Double) -> Void, successHandler:(data: AnyObject, msg: String) -> Void, failHandler: (code: Int?, msg: String) -> Void) {
+    internal func uploadHTTP(action:String, filePath: String, params: Dictionary<String, AnyObject>, progress: (value: Double) -> Void, successHandler:(data: AnyObject, msg: String) -> Void, failHandler: (code: Int?, msg: String) -> Void) {
         
-        getNetService().uploadHTTP(action, method: method, filePath: filePath, params: params, progress: progress, netServiceResponseHandler: getNetServiceResponseHander(successHandler, failHandler: failHandler))
+        getNetService().uploadHTTP(action, filePath: filePath, params: params, progress: progress, netServiceResponseHandler: getNetServiceResponseHander(successHandler, failHandler: failHandler))
      }
     
-    internal func uploadHTTP(action:String, method: HTTPMethod, fileData: NSData, fileName: String, mimeType: String, params: Dictionary<String, AnyObject>, progress: (value: Double) -> Void, successHandler:(data: AnyObject, msg: String) -> Void, failHandler: (code: Int?, msg: String) -> Void) {
+    internal func uploadHTTP(action:String, fileData: NSData, fileName: String, mimeType: String, params: Dictionary<String, AnyObject>, progress: (value: Double) -> Void, successHandler:(data: AnyObject, msg: String) -> Void, failHandler: (code: Int?, msg: String) -> Void) {
         
-        getNetService().uploadHTTP(action, method: method, fileData: fileData, fileName: fileName, mimeType: mimeType, params: params, progress: progress, netServiceResponseHandler: getNetServiceResponseHander(successHandler, failHandler: failHandler))
+        getNetService().uploadHTTP(action, fileData: fileData, fileName: fileName, mimeType: mimeType, params: params, progress: progress, netServiceResponseHandler: getNetServiceResponseHander(successHandler, failHandler: failHandler))
     }
 
     //to call approprite handler after handle response from server.
@@ -1647,15 +1664,15 @@ class ConvertUtil {
     }
     
     static func anyObjectToInt(ao: AnyObject?) -> Int {
-        return anyObjectToString(ao)!.toInt()!
+        return Int(anyObjectToString(ao)!)!
     }
 }
 
 internal protocol NetService {
     func get(action:String, params:[String: AnyObject], netServiceResponseHandler:(response:NetServiceResponse) -> Void)
     func post(action:String, params:[String: AnyObject], netServiceResponseHandler:(response:NetServiceResponse) -> Void)
-    func uploadHTTP(action:String, method: HTTPMethod, filePath: String, params: Dictionary<String, AnyObject>, progress: (value: Double) -> Void, netServiceResponseHandler:(response:NetServiceResponse) -> Void)
-    func uploadHTTP(action:String, method: HTTPMethod, fileData: NSData, fileName: String, mimeType: String, params: Dictionary<String, AnyObject>, progress: (value: Double) -> Void, netServiceResponseHandler:(response:NetServiceResponse) -> Void)
+    func uploadHTTP(action:String, filePath: String, params: Dictionary<String, AnyObject>, progress: (value: Double) -> Void, netServiceResponseHandler:(response:NetServiceResponse) -> Void)
+    func uploadHTTP(action:String, fileData: NSData, fileName: String, mimeType: String, params: Dictionary<String, AnyObject>, progress: (value: Double) -> Void, netServiceResponseHandler:(response:NetServiceResponse) -> Void)
 
 }
 
@@ -1680,49 +1697,64 @@ public class NetServiceImpl: NetService {
         self.accessSecrect = accessSecrect
     }
     
-    public func get(action:String, var params:[String:AnyObject],
+    public func get(action:String, params:[String:AnyObject],
         netServiceResponseHandler:(response:NetServiceResponse) -> Void) {
     
-        var tuple = initUrlAndParams(action, params: params)
+        let tuple = initUrlAndParams(action, params: params)
         NSLog("send get request")
-        HTTPTask().GET(tuple.url, parameters: tuple.params, completionHandler: getHTTPResponseHandler(netServiceResponseHandler))
+            do {
+                let opt = try HTTP.GET(tuple.url, parameters: tuple.params)
+                opt.start(getHTTPResponseHandler(netServiceResponseHandler))
+            } catch let error {
+                NSLog("\(error)")
+            }
     }
     
-    public func post(action:String, var params:[String:AnyObject],
+    public func post(action:String, params:[String:AnyObject],
         netServiceResponseHandler:(response:NetServiceResponse) -> Void) {
             
-        var tuple = initUrlAndParams(action, params: params)
+        let tuple = initUrlAndParams(action, params: params)
         NSLog("send post request")
-        HTTPTask().POST(tuple.url, parameters: tuple.params, completionHandler: getHTTPResponseHandler(netServiceResponseHandler))
+        do {
+            let opt = try HTTP.POST(tuple.url, parameters: tuple.params)
+            opt.start(getHTTPResponseHandler(netServiceResponseHandler))
+        } catch let error {
+                NSLog("\(error)")
+        }
+            
     }
     
-    public func uploadHTTP(action:String, method: HTTPMethod, filePath: String, params: Dictionary<String, AnyObject>, progress: (value: Double) -> Void, netServiceResponseHandler:(response:NetServiceResponse) -> Void) {
+    public func uploadHTTP(action:String, filePath: String, params: Dictionary<String, AnyObject>, progress: (value: Double) -> Void, netServiceResponseHandler:(response:NetServiceResponse) -> Void) {
        
-        var fileUrl = NSURL(fileURLWithPath: filePath)
-        var file = HTTPUpload(fileUrl: fileUrl!)
+        let fileUrl = NSURL(fileURLWithPath: filePath)
+        let file = Upload(fileUrl: fileUrl)
 
-        uploadHTTP(action, method: method, file: file, params: params, progress: progress, netServiceResponseHandler: netServiceResponseHandler)
+        uploadHTTP(action, file: file, params: params, progress: progress, netServiceResponseHandler: netServiceResponseHandler)
     }
 
-    public func uploadHTTP(action:String, method: HTTPMethod, fileData: NSData, fileName: String, mimeType: String, params: Dictionary<String, AnyObject>, progress: (value: Double) -> Void, netServiceResponseHandler:(response:NetServiceResponse) -> Void) {
-       uploadHTTP(action, method: method, file: HTTPUpload(data: fileData, fileName: fileName, mimeType: mimeType), params: params, progress: progress, netServiceResponseHandler: netServiceResponseHandler)
+    public func uploadHTTP(action:String, fileData: NSData, fileName: String, mimeType: String, params: Dictionary<String, AnyObject>, progress: (value: Double) -> Void, netServiceResponseHandler:(response:NetServiceResponse) -> Void) {
+       uploadHTTP(action, file: Upload(data: fileData, fileName: fileName, mimeType: mimeType), params: params, progress: progress, netServiceResponseHandler: netServiceResponseHandler)
     }
     
-    private func uploadHTTP(action:String, method: HTTPMethod, file: HTTPUpload, params: Dictionary<String, AnyObject>, progress: (value: Double) -> Void, netServiceResponseHandler:(response:NetServiceResponse) -> Void) {
-        var tuple = initUrlAndParams(action, params: params)
+    private func uploadHTTP(action:String, file: Upload, params: Dictionary<String, AnyObject>, progress: (value: Double) -> Void, netServiceResponseHandler:(response:NetServiceResponse) -> Void) {
+        let tuple = initUrlAndParams(action, params: params)
         
         var encodeParams = tuple.params
         encodeParams["uploadFile"] = file
         NSLog("append file \"\(file)\" parameter")
-        
         NSLog("send upload request")
-        HTTPTask().upload(tuple.url, method: method, parameters: encodeParams, progress: progress, completionHandler: getHTTPResponseHandler(netServiceResponseHandler))
+    
+        do {
+            let opt = try HTTP.POST(tuple.url, parameters: encodeParams)
+            opt.start(getHTTPResponseHandler(netServiceResponseHandler))
+        } catch let error {
+            NSLog("\(error)")
+        }
     }
 
-    
     private func initUrlAndParams(action: String,  var params:[String:AnyObject]) -> (url: String, params: Dictionary<String, AnyObject>) {
         let url = getUrl(action)
-        let params = encode(params)
+        params = encode(params)
         
         NSLog("prepare send request to \"\(url)\" width params \"\(params)\"")
         return (url, params)
@@ -1736,15 +1768,20 @@ public class NetServiceImpl: NetService {
     private func getHTTPResponseHandler(netServiceResponseHandler:(response:NetServiceResponse) -> Void) -> (httpResp: AnyObject) -> Void {
         return { (httpResp: AnyObject) -> Void in
             
+            NSLog("reponse \(httpResp)")
             //io error or security error
             if let err = httpResp.error {
+                NSLog("reponse is error: \(err)")
                 netServiceResponseHandler(response: .Error(code: nil, msg: String(stringInterpolationSegment: err)))
                 return
             }
             
-            if let data: AnyObject = (httpResp as! HTTPResponse).responseObject {
-                let nsData = (data as! NSData)
             
+            if let data: AnyObject = (httpResp as! Response).data {
+                NSLog("response data is \(data)")
+                let nsData = (data as! NSData)
+                NSLog("response data is convert to NSData")
+                
                 //all response must be json format.
                 if !(nsData.isValidJson()) {
                     NSLog("response data is invalid json: \(nsData.toNSString())")
@@ -1792,7 +1829,7 @@ public class NetServiceImpl: NetService {
     */
     func getSign(parameters: Dictionary<String, AnyObject>) -> String! {
         
-        let sortedKeys = Array(parameters.keys).sorted(<)
+        let sortedKeys = Array(parameters.keys).sort(<)
         var code = ""
         
         //serialize parameters
@@ -1807,7 +1844,7 @@ public class NetServiceImpl: NetService {
         NSLog("get sign phase 2: \(code)")
         
         //md5
-        let md5: String! = code.md5()!.lowercaseString
+        let md5: String! = code.md5().lowercaseString
         NSLog("get sign md5: \(md5)")
         
         return md5
@@ -1827,9 +1864,9 @@ public protocol PropertyChangeDelegate {
 }
 
 public class PropertyChangeTrait {
-    var propertyChangeDelegate: PropertyChangeDelegate?
+    public var propertyChangeDelegate: PropertyChangeDelegate?
     
-    func propertyChange(property: String, newValue: Any?, oldValue: Any?) {
+    public func propertyChange(property: String, newValue: Any?, oldValue: Any?) {
         if let d = propertyChangeDelegate {
             d.onChange(property, newValue: newValue, oldValue: oldValue)
         }
@@ -1843,7 +1880,7 @@ extension String {
     
     mutating func replace(replaced: String, withReplace: String) {
         let arr = self.componentsSeparatedByString(replaced)
-        self = withReplace.join(arr)
+        self = arr.joinWithSeparator(withReplace)
     }
 }
 
@@ -1864,13 +1901,17 @@ extension NSData {
 extension NSString {
     func toJson() -> AnyObject? {
         let jsonData = self.dataUsingEncoding(NSUTF8StringEncoding)
-        let json: AnyObject! = NSJSONSerialization.JSONObjectWithData(jsonData!, options: NSJSONReadingOptions.MutableContainers, error: nil)
-                
-        return json
+        
+        do {
+            return try NSJSONSerialization.JSONObjectWithData(jsonData!, options: NSJSONReadingOptions.MutableContainers)
+        } catch _ {
+            return nil
+        }
+        
     }
     
     func isValidJson() -> Bool {
-        var json:AnyObject? = toJson()
+        let json:AnyObject? = toJson()
         if nil == json {
             return false
         }
@@ -1879,7 +1920,7 @@ extension NSString {
     }
     
     func toString() -> String {
-        return self as! String
+        return self as String
     }
 }
 
@@ -1900,7 +1941,7 @@ class DateUtil {
     }
     
     static func getFormatter() -> NSDateFormatter {
-        var f = NSDateFormatter()
+        let f = NSDateFormatter()
         f.dateFormat = "yyyy-MM-dd HH:mm:ss"
         return f
     }
